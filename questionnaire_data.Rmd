@@ -1,0 +1,55 @@
+---
+title: "questionnaire_data"
+author: "Saira Asif"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+## PACKAGES ##
+library("readxl")
+library(tidyverse)
+```
+
+```{r}
+quest_summary = read_excel('../Ecoli_case_control_project_data.xlsx', sheet = 2,,col_names= TRUE)
+quest_data = read_excel('../Ecoli_case_control_project_data.xlsx', sheet = 3,,col_names= TRUE)
+
+# Number of farms by province 
+quest_data %>%
+  group_by( province) %>%
+  summarise(nof=n()/15)
+
+# Rename the farmtypes - some farmtype are repeated due to differences in typing, case, etc.
+quest_data %>%
+  group_by( farmtype) %>%
+  summarise(sub=n()/15) 
+
+# renaming oof-site-nursery with Off-site-nursery
+quest_data$farmtype <- replace(quest_data$farmtype, quest_data$farmtype=='off-site nursery', 'Off-site nursery')
+
+quest_data$farmtype <- replace(quest_data$farmtype, quest_data$farmtype=='off-site nursery + GDU', 'Off-site nursery')
+
+# renaming farrow-to-feeder to Farrow-to-feeder
+quest_data$farmtype <- replace(quest_data$farmtype, quest_data$farmtype=='farrow-to-feeder', 'Farrow-to-feeder')
+
+# renaming farrow-to-wean to Farrow-to-wean
+quest_data$farmtype <- replace(quest_data$farmtype, quest_data$farmtype=='farrow-to-wean', 'Farrow-to-wean')
+
+
+# Histogram of total number of farm per farmtype
+quest_data %>%
+  group_by( farmtype) %>%
+  summarise(sm=n()/15) %>%
+  mutate(farmtype_simple = case_when(farmtype=='Off-site nursery' ~ 'OSN',
+                                     farmtype=='Farrow-to-feeder' ~ 'Ftfeed',
+                                     farmtype == 'Farrow-to-finish' ~ 'Ftfinish',
+                                     farmtype == 'Farrow-to-wean' ~ 'Ftwean',
+                                     farmtype == 'off-site nursery, off-site grower-finisher' ~ 'OSN,OSGF')) %>%
+  ggplot(.) + geom_bar(aes(farmtype_simple, sm, fill=farmtype_simple), stat='identity') +
+  theme(axis.text.x=element_text(angle=90, hjust=1))
+
+
+
+```
+
